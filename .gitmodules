@@ -1,0 +1,6 @@
+[submodule "oldwhale-frontend"]
+	path = oldwhale-frontend
+	url = git@github.com:vadimkushneer/oldwhale-frontend.git
+[submodule "oldwhale-backend"]
+	path = oldwhale-backend
+	url = git@github.com:vadimkushneer/oldwhale-backend.git

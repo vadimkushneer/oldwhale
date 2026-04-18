@@ -1,0 +1,59 @@
+# Full local stack: PostgreSQL + Go API + Vite frontend (dev server in Docker).
+# From repo root: ./dev-stack.sh   or   docker compose up --build
+#
+# URLs:  API http://localhost:8080   Frontend http://localhost:5173
+# Postgres data: named volume fullstack_pgdata (not removed by up --build; use down -v to wipe)
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ow
+      POSTGRES_PASSWORD: owlocal
+      POSTGRES_DB: ow
+    ports:
+      - "5432:5432"
+    volumes:
+      - fullstack_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ow -d ow"]
+      interval: 3s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  api:
+    build:
+      context: ./oldwhale-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://ow:owlocal@db:5432/ow?sslmode=disable
+      JWT_SECRET: local-dev-change-me-to-32-chars-min!!
+      CORS_ORIGIN: http://localhost:5173
+      PORT: "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./oldwhale-frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8080
+      DOCKER: "1"
+    volumes:
+      - ./oldwhale-frontend:/app
+      - fullstack_web_node_modules:/app/node_modules
+    # Bind-mount replaces image /app; named volume holds deps. See oldwhale-frontend/docker-entrypoint.sh.
+    command: ["sh", "./docker-entrypoint.sh"]
+    depends_on:
+      - api
+
+volumes:
+  fullstack_pgdata:
+  fullstack_web_node_modules:
