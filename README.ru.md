@@ -2,7 +2,7 @@
 
 *English: [README.md](README.md)*
 
-Этот репозиторий объединяет **`oldwhale-frontend`** и **`oldwhale-backend`** в виде [подмодулей Git](https://git-scm.com/book/ru/v2/%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B-Git-%D0%9F%D0%BE%D0%B4%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D0%B8). Их код и история коммитов хранятся в отдельных удалённых репозиториях; здесь зафиксированы конкретные коммиты подмодулей и общая инфраструктура ([`docker-compose.yml`](docker-compose.yml), [`dev-stack.sh`](dev-stack.sh), [`start-local-dev.sh`](start-local-dev.sh)).
+Этот репозиторий объединяет **`oldwhale-frontend`** и **`oldwhale-backend`** в виде [подмодулей Git](https://git-scm.com/book/ru/v2/%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B-Git-%D0%9F%D0%BE%D0%B4%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D0%B8). Их код и история коммитов хранятся в отдельных удалённых репозиториях. Метарепозиторий **фиксирует конкретные коммиты** (gitlink); каждый такой коммит должен лежать на ветке **`main`** соответствующего подмодуля — см. `branch = main` в [`.gitmodules`](.gitmodules). Общая инфраструктура в корне: [`docker-compose.yml`](docker-compose.yml), [`dev-stack.sh`](dev-stack.sh), [`start-local-dev.sh`](start-local-dev.sh).
 
 - **`oldwhale-backend`** — HTTP API на Go, только PostgreSQL ([README](oldwhale-backend/README.md)).
 - **`oldwhale-frontend`** — React + Vite ([README](oldwhale-frontend/README.md)).
@@ -76,9 +76,24 @@ git clone git@github.com:vadimkushneer/oldwhale.git && cd oldwhale && ./start-lo
 
 ## Работа с подмодулями
 
-- **Изменение кода приложений:** коммит и push внутри `oldwhale-frontend/` или `oldwhale-backend/`, как в обычном репозитории.
-- **Обновление закреплённых коммитов в метарепозитории:** после получения последних изменений в подмодуле (`cd oldwhale-frontend && git pull`) перейдите в корень метарепозитория, выполните `git add oldwhale-frontend`, сделайте коммит и отправьте изменения в `oldwhale`, чтобы у остальных зафиксировалась новая пара SHA.
-- **Обновить всё:** из корня метарепозитория: `git pull`, затем `git submodule update --init --recursive` (или `git pull --recurse-submodules`).
+Закреплённые коммиты всегда берутся с ветки **`main`** каждого подрепозитория (не с произвольных веток). [`start-local-dev.sh`](start-local-dev.sh) выставляет ровно те коммиты, которые записаны в метарепозитории; он сам по себе не «догоняет» движущийся `main`, пока вы не обновите закрепления (ниже).
+
+- **Изменение кода:** коммит и push в `oldwhale-frontend/` или `oldwhale-backend/` в ветку **`main`** (или через PR в `main`), как в обычном репозитории.
+
+- **Поднять закрепления до последнего `main` в обоих подмодулях** (из корня метарепозитория):
+
+  ```bash
+  git submodule update --init --recursive --remote
+  git add oldwhale-frontend oldwhale-backend
+  git commit -m "chore: bump submodules to latest main"
+  git push
+  ```
+
+  Флаг `--remote` использует записи `branch = main` в [`.gitmodules`](.gitmodules). Если обновился только один подмодуль: `git submodule update --remote oldwhale-frontend`.
+
+- **Вручную:** `cd oldwhale-frontend && git fetch origin && git checkout main && git pull`, то же для backend, затем из корня `git add` оба подмодуля, коммит, push.
+
+- **Получить изменения как разработчик:** `git pull` в корне, затем `git submodule update --init --recursive` под новые закрепления (или `git pull --recurse-submodules`).
 
 ## Дополнительно: стек без сценария первичного запуска
 

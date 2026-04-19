@@ -2,7 +2,7 @@
 
 [README на русском](README.ru.md)
 
-This repository orchestrates **`oldwhale-frontend`** and **`oldwhale-backend`** as [Git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). Their code and history live in separate remotes; this repo pins specific commits and holds shared tooling ([`docker-compose.yml`](docker-compose.yml), [`dev-stack.sh`](dev-stack.sh), [`start-local-dev.sh`](start-local-dev.sh)).
+This repository orchestrates **`oldwhale-frontend`** and **`oldwhale-backend`** as [Git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). Their code and history live in separate remotes. The meta-repo **pins specific commits** (gitlinks); each pin is expected to be a commit on the submodule’s **`main`** branch — see `branch = main` in [`.gitmodules`](.gitmodules). Shared tooling lives at the root ([`docker-compose.yml`](docker-compose.yml), [`dev-stack.sh`](dev-stack.sh), [`start-local-dev.sh`](start-local-dev.sh)).
 
 - **`oldwhale-backend`** — Go API + PostgreSQL-only ([README](oldwhale-backend/README.md)).
 - **`oldwhale-frontend`** — React + Vite ([README](oldwhale-frontend/README.md)).
@@ -76,9 +76,23 @@ Equivalent: `git submodule update --init --recursive`.
 
 ## Working with submodules
 
-- **Change app code:** commit and push inside `oldwhale-frontend/` or `oldwhale-backend/` as in a normal repository.
-- **Update the pins in this meta-repo:** after pulling latest in a submodule (`cd oldwhale-frontend && git pull`), return to the repo root, run `git add oldwhale-frontend`, commit, and push `oldwhale` so others get the new pair of SHAs.
-- **Pull everything:** from the root, `git pull` then `git submodule update --init --recursive` (or `git pull --recurse-submodules`).
+Pins always point at **commits on `main`** in each sub-repo (not arbitrary branches). [`start-local-dev.sh`](start-local-dev.sh) checks out exactly the **commits recorded in this repo** so everyone gets the same snapshot; it does not follow moving `main` unless you bump the pins below.
+
+- **Change app code:** commit and push inside `oldwhale-frontend/` or `oldwhale-backend/` on **`main`** (or merge via PR into `main`) as in a normal repository.
+- **Bump pins to the latest `main` in both sub-repos** (from the meta-repo root):
+
+  ```bash
+  git submodule update --init --recursive --remote
+  git add oldwhale-frontend oldwhale-backend
+  git commit -m "chore: bump submodules to latest main"
+  git push
+  ```
+
+  `--remote` uses the `branch = main` entries in [`.gitmodules`](.gitmodules). If only one submodule moved, you can pass a path: `git submodule update --remote oldwhale-frontend`.
+
+- **Manual bump** (equivalent): `cd oldwhale-frontend && git fetch origin && git checkout main && git pull`, same for backend, then from root `git add` both submodules, commit, push.
+
+- **Pull as a developer:** `git pull` in the root, then `git submodule update --init --recursive` to match the new pins (or `git pull --recurse-submodules`).
 
 ## Advanced: stack without the bootstrap script
 
