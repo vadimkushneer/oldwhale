@@ -43,7 +43,7 @@ cd oldwhale
    cd oldwhale
    ```
 
-2. Из **корня репозитория** выполните **одну команду**. Она инициализирует и проверит **`oldwhale-frontend`** и **`oldwhale-backend`**, затем запустит **`docker compose up --build`** (то же самое, что [`dev-stack.sh`](dev-stack.sh)):
+2. Из **корня репозитория** выполните **одну команду**. Она инициализирует подмодули, **подтягивает последний `main`** с каждого удалённого репозитория (`git submodule update --init --recursive --remote`, ветка задаётся `branch = main` в [`.gitmodules`](.gitmodules)), затем запускает **`docker compose up --build`** (то же самое, что [`dev-stack.sh`](dev-stack.sh)):
 
    ```bash
    ./start-local-dev.sh
@@ -62,38 +62,34 @@ cd oldwhale
 git clone git@github.com:vadimkushneer/oldwhale.git && cd oldwhale && ./start-local-dev.sh
 ```
 
-Перед `./start-local-dev.sh` необязательно выполнять `git clone --recurse-submodules ...`: скрипт всегда запускает `git submodule update --init --recursive`.
+Перед `./start-local-dev.sh` необязательно выполнять `git clone --recurse-submodules ...`: скрипт запускает `git submodule update --init --recursive --remote` (последний `main`, не только закрепления в метарепозитории). После этого в корне метарепозитория подмодули могут отображаться как **изменённые** — это нормально для локальной разработки, пока вы не зафиксируете новые закрепления или не отмените изменения.
 
-### Только подмодули (без Docker)
+### Только подмодули (без Docker), точные закрепления
 
-Если репозиторий уже есть и нужно лишь проверить подмодули в рабочем каталоге:
+Если репозиторий уже есть и нужны подмодули **ровно на коммитах, записанных в метарепозитории** (без подтягивания последнего `main`):
 
 ```bash
 ./scripts/init-submodules.sh
 ```
 
-Эквивалент вручную: `git submodule update --init --recursive`.
+Эквивалент вручную: `git submodule update --init --recursive` (без `--remote`).
 
 ## Работа с подмодулями
 
-Закреплённые коммиты всегда берутся с ветки **`main`** каждого подрепозитория (не с произвольных веток). [`start-local-dev.sh`](start-local-dev.sh) выставляет ровно те коммиты, которые записаны в метарепозитории; он сам по себе не «догоняет» движущийся `main`, пока вы не обновите закрепления (ниже).
+Закрепления в метарепозитории относятся к коммитам на ветке **`main`** каждого подрепозитория. **[`start-local-dev.sh`](start-local-dev.sh)** перед Docker **всегда подтягивает последний `main`** в оба подмодуля; он **не** оставляет вас на старых закреплённых SHA. Чтобы **записать** новые SHA в метарепозиторий (чтобы у других при обычном `clone` совпадало), сделайте коммит в корне после синхронизации.
 
 - **Изменение кода:** коммит и push в `oldwhale-frontend/` или `oldwhale-backend/` в ветку **`main`** (или через PR в `main`), как в обычном репозитории.
 
-- **Поднять закрепления до последнего `main` в обоих подмодулях** (из корня метарепозитория):
+- **Зафиксировать текущие SHA подмодулей в метарепозитории** (после `./start-local-dev.sh` или любого `git submodule update --remote`):
 
   ```bash
-  git submodule update --init --recursive --remote
   git add oldwhale-frontend oldwhale-backend
   git commit -m "chore: bump submodules to latest main"
-  git push
   ```
 
-  Флаг `--remote` использует записи `branch = main` в [`.gitmodules`](.gitmodules). Если обновился только один подмодуль: `git submodule update --remote oldwhale-frontend`.
+  Отправка на удалённый репозиторий — по вашему обычному процессу (`git push`). Запись `branch = main` задаётся в [`.gitmodules`](.gitmodules).
 
-- **Вручную:** `cd oldwhale-frontend && git fetch origin && git checkout main && git pull`, то же для backend, затем из корня `git add` оба подмодуля, коммит, push.
-
-- **Получить изменения как разработчик:** `git pull` в корне, затем `git submodule update --init --recursive` под новые закрепления (или `git pull --recurse-submodules`).
+- **Получить изменения как разработчик (только закрепления из метарепозитория):** `git pull` в корне, затем `git submodule update --init --recursive` (или `git pull --recurse-submodules`). То же без Docker: [`./scripts/init-submodules.sh`](scripts/init-submodules.sh).
 
 ## Дополнительно: стек без сценария первичного запуска
 

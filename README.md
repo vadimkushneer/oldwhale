@@ -43,7 +43,7 @@ To stop rewriting GitHub SSH URLs later, open your global config and remove the 
    cd oldwhale
    ```
 
-2. From the **repository root**, run **one command**. It initializes/checks out **`oldwhale-frontend`** and **`oldwhale-backend`**, then runs **`docker compose up --build`** (same as [`dev-stack.sh`](dev-stack.sh)):
+2. From the **repository root**, run **one command**. It initializes the submodules, **updates them to the latest `main`** on each remote (`git submodule update --init --recursive --remote`, using `branch = main` in [`.gitmodules`](.gitmodules)), then runs **`docker compose up --build`** (same as [`dev-stack.sh`](dev-stack.sh)):
 
    ```bash
    ./start-local-dev.sh
@@ -62,37 +62,34 @@ If you prefer a single line after creating a parent directory:
 git clone git@github.com:vadimkushneer/oldwhale.git && cd oldwhale && ./start-local-dev.sh
 ```
 
-Using `git clone --recurse-submodules ...` before `./start-local-dev.sh` is optional; the script always runs `git submodule update --init --recursive`.
+Using `git clone --recurse-submodules ...` before `./start-local-dev.sh` is optional; the script runs `git submodule update --init --recursive --remote` (latest `main`, not only the pins stored in the meta-repo). Your local meta-repo may then show the submodule paths as **modified** until you commit new pins or discard—this is normal for local dev.
 
-### Submodule only (no Docker)
+### Submodule only (no Docker), exact pins
 
-If you already have the repo and only need the submodules checked out:
+If you already have the repo and only need the submodules at the **commits recorded in this meta-repo** (no pull of latest `main`):
 
 ```bash
 ./scripts/init-submodules.sh
 ```
 
-Equivalent: `git submodule update --init --recursive`.
+Equivalent: `git submodule update --init --recursive` (no `--remote`).
 
 ## Working with submodules
 
-Pins always point at **commits on `main`** in each sub-repo (not arbitrary branches). [`start-local-dev.sh`](start-local-dev.sh) checks out exactly the **commits recorded in this repo** so everyone gets the same snapshot; it does not follow moving `main` unless you bump the pins below.
+Pins in the meta-repo point at **commits on `main`** in each sub-repo (not arbitrary branches). **[`start-local-dev.sh`](start-local-dev.sh)** always **pulls latest `main`** into both submodules before Docker; it does **not** leave you on the old pinned SHAs. To **record** those new SHAs in the meta-repo (so clones without `--remote` match), commit and push from the root after syncing.
 
 - **Change app code:** commit and push inside `oldwhale-frontend/` or `oldwhale-backend/` on **`main`** (or merge via PR into `main`) as in a normal repository.
-- **Bump pins to the latest `main` in both sub-repos** (from the meta-repo root):
+
+- **Record the current submodule SHAs in the meta-repo** (after `./start-local-dev.sh` or any `git submodule update --remote`):
 
   ```bash
-  git submodule update --init --recursive --remote
   git add oldwhale-frontend oldwhale-backend
   git commit -m "chore: bump submodules to latest main"
-  git push
   ```
 
-  `--remote` uses the `branch = main` entries in [`.gitmodules`](.gitmodules). If only one submodule moved, you can pass a path: `git submodule update --remote oldwhale-frontend`.
+  Add `git push` when you use your normal remote workflow. `--remote` uses the `branch = main` entries in [`.gitmodules`](.gitmodules).
 
-- **Manual bump** (equivalent): `cd oldwhale-frontend && git fetch origin && git checkout main && git pull`, same for backend, then from root `git add` both submodules, commit, push.
-
-- **Pull as a developer:** `git pull` in the root, then `git submodule update --init --recursive` to match the new pins (or `git pull --recurse-submodules`).
+- **Pull as a developer (match committed pins only):** `git pull` in the root, then `git submodule update --init --recursive` (or `git pull --recurse-submodules`). Use [`./scripts/init-submodules.sh`](scripts/init-submodules.sh) for the same without Docker.
 
 ## Advanced: stack without the bootstrap script
 

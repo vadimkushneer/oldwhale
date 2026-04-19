@@ -17,5 +17,6 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-bash "$ROOT/scripts/init-submodules.sh"
+# Follow latest main in each submodule (see branch = main in .gitmodules); does not change meta-repo commits.
+git submodule update --init --recursive --remote
 exec "$ROOT/dev-stack.sh" "$@"
