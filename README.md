@@ -11,7 +11,28 @@ This repository orchestrates **`oldwhale-frontend`** and **`oldwhale-backend`** 
 
 - **Git**
 - **Docker** with **Compose V2** (`docker compose` — not only the legacy `docker-compose` binary)
-- Enough disk space for images and a **GitHub account with [SSH keys set up](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)** — [`.gitmodules`](.gitmodules) uses `git@github.com:...` URLs for the submodules, so `git submodule update` needs SSH access to GitHub unless you change those URLs locally.
+- Enough disk space for images and a **GitHub account** — [`.gitmodules`](.gitmodules) uses `git@github.com:...` URLs for the submodules, so submodule clone/fetch normally uses **SSH**. Either [add an SSH key to GitHub](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) or use the **HTTPS workaround** below (no repo changes).
+
+### Optional: use HTTPS for GitHub instead of SSH (local only)
+
+The repository can stay on SSH URLs. On a machine where you prefer **HTTPS** (no `ssh` key, or `Permission denied (publickey)`), configure Git **once** for your user:
+
+```bash
+git config --global url."https://github.com/".insteadOf "git@github.com:"
+```
+
+After that, any Git operation that would use `git@github.com:owner/repo.git` will use `https://github.com/owner/repo.git` instead. Clone the meta-repo with HTTPS if you like:
+
+```bash
+git clone https://github.com/vadimkushneer/oldwhale.git
+cd oldwhale
+```
+
+Set this **before** the first successful submodule init. If a previous run failed halfway, from the repo root remove empty or partial submodule folders (`oldwhale-frontend`, `oldwhale-backend`), then run `./start-local-dev.sh` again.
+
+**Private repositories** still require authentication over HTTPS ([credential helper](https://docs.github.com/en/get-started/git-basics/caching-your-github-credentials-in-git) and a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens), or [`gh auth login`](https://cli.github.com/)).
+
+To stop rewriting GitHub SSH URLs later, open your global config and remove the `url … insteadOf` entry, or run `git config --global --get-regexp '^url\.'` to see the exact key name, then `git config --global --unset-all <key>`.
 
 ## Quick start (new developers)
 

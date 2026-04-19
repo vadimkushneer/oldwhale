@@ -11,7 +11,28 @@
 
 - **Git**
 - **Docker** с **Compose V2** (команда `docker compose` — недостаточно только устаревшего исполняемого файла `docker-compose`)
-- Достаточно места на диске для образов и **учётная запись GitHub с [настроенным доступом по SSH](https://docs.github.com/ru/authentication/connecting-to-github-with-ssh)** — в [`.gitmodules`](.gitmodules) для подмодулей указаны URL вида `git@github.com:...`, поэтому при `git submodule update` нужен SSH-доступ к GitHub, если вы локально не замените эти URL (например, на HTTPS).
+- Достаточно места на диске для образов и **учётная запись GitHub** — в [`.gitmodules`](.gitmodules) для подмодулей указаны URL вида `git@github.com:...`, поэтому клонирование/обновление подмодулей обычно идёт по **SSH**. Либо [добавьте SSH-ключ в GitHub](https://docs.github.com/ru/authentication/connecting-to-github-with-ssh), либо используйте **локальный обход через HTTPS** (ниже), без правок репозитория.
+
+### По желанию: HTTPS вместо SSH для GitHub (только на вашей машине)
+
+В самом репозитории по-прежнему можно хранить SSH-URL. Если вы предпочитаете **HTTPS** (нет ключа `ssh` или ошибка `Permission denied (publickey)`), один раз настройте Git для своего пользователя:
+
+```bash
+git config --global url."https://github.com/".insteadOf "git@github.com:"
+```
+
+После этого любые обращения к `git@github.com:owner/repo.git` будут заменяться на `https://github.com/owner/repo.git`. Метарепозиторий можно клонировать по HTTPS:
+
+```bash
+git clone https://github.com/vadimkushneer/oldwhale.git
+cd oldwhale
+```
+
+Сделайте это **до** первого успешного `git submodule update`. Если прошлая попытка оборвалась на полпути, из корня удалите пустые или неполные каталоги подмодулей (`oldwhale-frontend`, `oldwhale-backend`) и снова запустите `./start-local-dev.sh`.
+
+**Приватные репозитории** по-прежнему требуют аутентификации по HTTPS ([сохранение учётных данных](https://docs.github.com/ru/get-started/git-basics/caching-your-github-credentials-in-git), [личный токен](https://docs.github.com/ru/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) или [`gh auth login`](https://cli.github.com/)).
+
+Чтобы позже отключить подмену URL, отредактируйте глобальный конфиг и удалите блок `url … insteadOf`, либо выполните `git config --global --get-regexp '^url\.'`, найдите нужный ключ и снимите его через `git config --global --unset-all <ключ>`.
 
 ## Быстрый старт (для новых разработчиков)
 
