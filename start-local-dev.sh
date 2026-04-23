@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# Initialize Git submodules and start the full local stack (Postgres + API + Vite in Docker).
+# Start the full local stack (Postgres + API + Vite in Docker) using the code
+# currently present in ./oldwhale-frontend and ./oldwhale-backend. No Git operations.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
-if ! command -v git >/dev/null 2>&1; then
-  echo "error: git is not installed or not on PATH" >&2
-  exit 1
-fi
 if ! command -v docker >/dev/null 2>&1; then
   echo "error: docker is not installed or not on PATH (install Docker Desktop or Docker Engine)" >&2
   exit 1
@@ -17,6 +14,11 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-# Follow latest main in each submodule (see branch = main in .gitmodules); does not change meta-repo commits.
-git submodule update --init --recursive --remote
+for sub in oldwhale-frontend oldwhale-backend; do
+  if [ ! -d "$ROOT/$sub" ] || [ -z "$(ls -A "$ROOT/$sub" 2>/dev/null || true)" ]; then
+    echo "error: '$sub' folder is missing or empty; populate it before running this script" >&2
+    exit 1
+  fi
+done
+
 exec "$ROOT/dev-stack.sh" "$@"
