@@ -2,6 +2,7 @@
 	path = oldwhale-frontend
 	url = git@github.com:vadimkushneer/oldwhale-frontend.git
 	branch = main
+
 [submodule "oldwhale-backend"]
 	path = oldwhale-backend
 	url = git@github.com:vadimkushneer/oldwhale-backend.git
