@@ -14,10 +14,19 @@ services:
     env_file:
       - .env
     environment:
+      NODE_ENV: ${NODE_ENV:-development}
       JWT_SECRET: ${JWT_SECRET:-local-dev-change-me-to-32-chars-min!!}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,https://localhost,capacitor://localhost}
       PORT: ${PORT:-8080}
       SQLITE_PATH: /app/data/oldwhale.sqlite
+      REGISTRATION_OTP_TTL_SECONDS: ${REGISTRATION_OTP_TTL_SECONDS:-600}
+      REGISTRATION_SETUP_TTL_SECONDS: ${REGISTRATION_SETUP_TTL_SECONDS:-900}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-Old Whale <no-reply@oldwhale.local>}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
