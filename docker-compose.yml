@@ -1,48 +1,29 @@
-# Full local stack: PostgreSQL + NestJS API + Vite frontend (dev server in Docker).
-# From repo root: ./dev-stack.sh   or   docker compose up --build
+# Full local stack: SQLite-backed NestJS API + Vite frontend (dev server in Docker).
+# From repo root: ./start-latest-local.sh   or   ./dev-stack.sh
 #
-# URLs:  API http://localhost:8080   Frontend http://localhost:5173
-# Postgres data: named volume fullstack_pgdata_pg18 (not removed by up --build; use down -v to wipe)
+# URLs:  API http://localhost:${API_HOST_PORT:-18080}   Frontend http://localhost:5173
+# Backend SQLite data: named volume fullstack_backend_data (not removed by up --build; use down -v to wipe)
 
 services:
-  db:
-    image: postgres:18-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-ow}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-owlocal}
-      POSTGRES_DB: ${POSTGRES_DB:-ow}
-    ports:
-      - "5432:5432"
-    volumes:
-      - fullstack_pgdata_pg18:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ow} -d ${POSTGRES_DB:-ow}"]
-      interval: 3s
-      timeout: 5s
-      retries: 15
-      start_period: 10s
-
   api:
     build:
       context: ./oldwhale-backend
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "${API_HOST_PORT:-18080}:8080"
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-ow}:${POSTGRES_PASSWORD:-owlocal}@db:5432/${POSTGRES_DB:-ow}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:-local-dev-change-me-to-32-chars-min!!}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,https://localhost,capacitor://localhost}
       PORT: ${PORT:-8080}
-      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-true}
+      SQLITE_PATH: /app/data/oldwhale.sqlite
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
-    depends_on:
-      db:
-        condition: service_healthy
+    volumes:
+      - fullstack_backend_data:/app/data
 
   web:
     build:
@@ -51,7 +32,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:8080
+      VITE_API_URL: http://localhost:${API_HOST_PORT:-18080}
       DOCKER: "1"
     volumes:
       - ./oldwhale-frontend:/app
@@ -62,5 +43,5 @@ services:
       - api
 
 volumes:
-  fullstack_pgdata_pg18:
+  fullstack_backend_data:
   fullstack_web_node_modules:

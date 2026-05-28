@@ -4,7 +4,7 @@
 
 Этот репозиторий объединяет **`oldwhale-frontend`** и **`oldwhale-backend`** в виде [подмодулей Git](https://git-scm.com/book/ru/v2/%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B-Git-%D0%9F%D0%BE%D0%B4%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D0%B8). Их код и история коммитов хранятся в отдельных удалённых репозиториях. Метарепозиторий **фиксирует конкретные коммиты** (gitlink); каждый такой коммит должен лежать на ветке **`main`** соответствующего подмодуля — см. `branch = main` в [`.gitmodules`](.gitmodules). Общая инфраструктура в корне: [`docker-compose.yml`](docker-compose.yml), [`dev-stack.sh`](dev-stack.sh), [`start-local-dev.sh`](start-local-dev.sh).
 
-- **`oldwhale-backend`** — HTTP API на Go, только PostgreSQL ([README](oldwhale-backend/README.md)).
+- **`oldwhale-backend`** — лёгкий API на NestJS с хранением в SQLite ([README](oldwhale-backend/README.md)).
 - **`oldwhale-frontend`** — React + Vite ([README](oldwhale-frontend/README.md)).
 
 ## Требования
@@ -49,7 +49,7 @@ cd oldwhale
    ./start-local-dev.sh
    ```
 
-Оставьте процесс запущенным. Откройте [http://localhost:5173](http://localhost:5173) — приложение Vite, [http://localhost:8080](http://localhost:8080) — API, [http://localhost:8080/swagger](http://localhost:8080/swagger) — Swagger. Используется [`docker-compose.yml`](docker-compose.yml).
+Оставьте процесс запущенным. Откройте [http://localhost:5173](http://localhost:5173) — приложение Vite, [http://localhost:18080](http://localhost:18080) — API, [http://localhost:18080/swagger](http://localhost:18080/swagger) — Swagger. Используется [`docker-compose.yml`](docker-compose.yml). Бэкенд хранит локальные данные в SQLite-томе и больше не требует PostgreSQL или Redis. Если на машине свободен порт `8080`, локальный порт API можно переопределить через `API_HOST_PORT=8080`.
 
 - **Остановка:** `Ctrl+C` в терминале или из другой оболочки в том же каталоге: `docker compose down`.
 - **Удаление локального тома с данными БД:** `docker compose down -v`.

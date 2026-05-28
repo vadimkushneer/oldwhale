@@ -4,7 +4,7 @@
 
 This repository orchestrates **`oldwhale-frontend`** and **`oldwhale-backend`** as [Git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). Their code and history live in separate remotes. The meta-repo **pins specific commits** (gitlinks); each pin is expected to be a commit on the submodule’s **`main`** branch — see `branch = main` in [`.gitmodules`](.gitmodules). Shared tooling lives at the root ([`docker-compose.yml`](docker-compose.yml), [`dev-stack.sh`](dev-stack.sh), [`start-local-dev.sh`](start-local-dev.sh)).
 
-- **`oldwhale-backend`** — Go API + PostgreSQL-only ([README](oldwhale-backend/README.md)).
+- **`oldwhale-backend`** — lightweight NestJS API with SQLite persistence ([README](oldwhale-backend/README.md)).
 - **`oldwhale-frontend`** — React + Vite ([README](oldwhale-frontend/README.md)).
 
 ## Prerequisites
@@ -43,15 +43,27 @@ To stop rewriting GitHub SSH URLs later, open your global config and remove the 
    cd oldwhale
    ```
 
-2. From the **repository root**, run **one command**. It initializes the submodules, **updates them to the latest `main`** on each remote (`git submodule update --init --recursive --remote`, using `branch = main` in [`.gitmodules`](.gitmodules)), then runs **`docker compose up --build`** (same as [`dev-stack.sh`](dev-stack.sh)):
+2. If the submodule folders are missing, initialize them once:
 
    ```bash
-   ./start-local-dev.sh
+   ./scripts/init-submodules.sh
    ```
 
-Leave that process running. Open [http://localhost:5173](http://localhost:5173) for the Vite app, [http://localhost:8080](http://localhost:8080) for the API, and [http://localhost:8080/swagger](http://localhost:8080/swagger) for Swagger. Uses [`docker-compose.yml`](docker-compose.yml).
+3. From the **repository root**, launch the latest local stack:
 
-- **Stop:** `Ctrl+C` in the terminal, or from another shell in the same directory: `docker compose down`.
+   ```bash
+   ./start-latest-local.sh
+   ```
+
+   This uses Docker Compose cache to rebuild only changed image layers, starts the
+   stack detached, removes orphaned Compose containers, and force-recreates only
+   services whose running containers still point at an older image ID.
+
+Open [http://localhost:5173](http://localhost:5173) for the Vite app, [http://localhost:18080](http://localhost:18080) for the API, and [http://localhost:18080/swagger](http://localhost:18080/swagger) for Swagger. Uses [`docker-compose.yml`](docker-compose.yml). The backend stores local data in a SQLite volume instead of requiring PostgreSQL or Redis. Override the local API host port with `API_HOST_PORT=8080` if that port is free on your machine.
+
+- **Follow logs:** `docker compose logs -f api web` or run `./start-local-dev.sh`, which wraps the same latest-stack launcher and attaches logs.
+- **Verify latest images are running:** rerun `./start-latest-local.sh`; it compares container image IDs with current Compose image IDs and exits non-zero if any service is stale.
+- **Stop:** `docker compose down`.
 - **Wipe the local database volume:** `docker compose down -v`.
 
 ### One-liner (clone and start in one paste)
@@ -59,10 +71,10 @@ Leave that process running. Open [http://localhost:5173](http://localhost:5173) 
 If you prefer a single line after creating a parent directory:
 
 ```bash
-git clone git@github.com:vadimkushneer/oldwhale.git && cd oldwhale && ./start-local-dev.sh
+git clone git@github.com:vadimkushneer/oldwhale.git && cd oldwhale && ./scripts/init-submodules.sh && ./start-latest-local.sh
 ```
 
-Using `git clone --recurse-submodules ...` before `./start-local-dev.sh` is optional; the script runs `git submodule update --init --recursive --remote` (latest `main`, not only the pins stored in the meta-repo). Your local meta-repo may then show the submodule paths as **modified** until you commit new pins or discard—this is normal for local dev.
+Using `git clone --recurse-submodules ...` before `./scripts/init-submodules.sh` is optional. `./start-latest-local.sh` and `./start-local-dev.sh` do not perform Git operations; they run whatever code is currently present in `oldwhale-frontend/` and `oldwhale-backend/`.
 
 ### Submodule only (no Docker), exact pins
 
@@ -76,11 +88,11 @@ Equivalent: `git submodule update --init --recursive` (no `--remote`).
 
 ## Working with submodules
 
-Pins in the meta-repo point at **commits on `main`** in each sub-repo (not arbitrary branches). **[`start-local-dev.sh`](start-local-dev.sh)** always **pulls latest `main`** into both submodules before Docker; it does **not** leave you on the old pinned SHAs. To **record** those new SHAs in the meta-repo (so clones without `--remote` match), commit and push from the root after syncing.
+Pins in the meta-repo point at **commits on `main`** in each sub-repo (not arbitrary branches). The local Docker launchers do **not** change Git state; they run whatever code is currently present in the submodule folders. To update submodules to the latest `main`, run `git submodule update --remote --recursive` explicitly. To **record** those new SHAs in the meta-repo (so clones without `--remote` match), commit and push from the root after syncing.
 
 - **Change app code:** commit and push inside `oldwhale-frontend/` or `oldwhale-backend/` on **`main`** (or merge via PR into `main`) as in a normal repository.
 
-- **Record the current submodule SHAs in the meta-repo** (after `./start-local-dev.sh` or any `git submodule update --remote`):
+- **Record the current submodule SHAs in the meta-repo** (after any `git submodule update --remote`):
 
   ```bash
   git add oldwhale-frontend oldwhale-backend
@@ -96,7 +108,10 @@ Pins in the meta-repo point at **commits on `main`** in each sub-repo (not arbit
 If submodules are already initialized, you can start Docker directly from the repo root:
 
 ```bash
-./dev-stack.sh
+./start-latest-local.sh
 ```
+
+`./dev-stack.sh` and `./start-local-dev.sh` call the same launcher with `--attach`
+so logs are followed in the foreground after the stack is verified.
 
 **GitHub Pages** for the frontend: use [`oldwhale-frontend/.github/workflows/deploy-github-pages.yml`](oldwhale-frontend/.github/workflows/deploy-github-pages.yml) when that folder is its own Git remote (`npm run build:gh-pages` in CI, not `Dockerfile.dev`).
