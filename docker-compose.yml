@@ -17,16 +17,28 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       JWT_SECRET: ${JWT_SECRET:-local-dev-change-me-to-32-chars-min!!}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,https://localhost,capacitor://localhost}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:5173}
+      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://localhost:${API_HOST_PORT:-18080}}
       PORT: ${PORT:-8080}
       SQLITE_PATH: /app/data/oldwhale.sqlite
       REGISTRATION_OTP_TTL_SECONDS: ${REGISTRATION_OTP_TTL_SECONDS:-600}
       REGISTRATION_SETUP_TTL_SECONDS: ${REGISTRATION_SETUP_TTL_SECONDS:-900}
+      PASSWORD_RESET_TTL_SECONDS: ${PASSWORD_RESET_TTL_SECONDS:-3600}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_SECURE: ${SMTP_SECURE:-false}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-Old Whale <no-reply@oldwhale.local>}
+      VTB_API_BASE_URL: ${VTB_API_BASE_URL:-https://vtbkz.rbsuat.com/payment/rest/}
+      VTB_USER_NAME: ${VTB_USER_NAME:-Oldwhale-api}
+      VTB_PASSWORD: ${VTB_PASSWORD:-Oldwhale}
+      VTB_TOKEN: ${VTB_TOKEN:-}
+      VTB_CURRENCY: ${VTB_CURRENCY:-398}
+      VTB_LANGUAGE: ${VTB_LANGUAGE:-ru}
+      VTB_DYNAMIC_CALLBACK_URL: ${VTB_DYNAMIC_CALLBACK_URL:-}
+      VTB_KZT_MINOR_UNITS_PER_OWK: ${VTB_KZT_MINOR_UNITS_PER_OWK:-100}
+      VTB_SESSION_TIMEOUT_SECONDS: ${VTB_SESSION_TIMEOUT_SECONDS:-18000}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
